@@ -1,0 +1,15 @@
+﻿app/(dashboard)/homeowner/homes/page.tsx(38,11): error TS2304: Cannot find name 'editingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(39,26): error TS2304: Cannot find name 'editingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(46,21): error TS2304: Cannot find name 'editingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(48,7): error TS2304: Cannot find name 'setEditingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(65,5): error TS2304: Cannot find name 'setEditingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(79,36): error TS2304: Cannot find name 'setEditingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(89,58): error TS2304: Cannot find name 'editingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(90,90): error TS2304: Cannot find name 'setEditingHome'.
+app/(dashboard)/homeowner/homes/page.tsx(131,61): error TS2304: Cannot find name 'editingHome'.
+app/api/webhook/clerk/route.ts(17,33): error TS2339: Property 'get' does not exist on type 'Promise<ReadonlyHeaders>'.
+app/api/webhook/clerk/route.ts(18,40): error TS2339: Property 'get' does not exist on type 'Promise<ReadonlyHeaders>'.
+app/api/webhook/clerk/route.ts(19,40): error TS2339: Property 'get' does not exist on type 'Promise<ReadonlyHeaders>'.
+app/api/webhook/clerk/route.ts(75,8): error TS2339: Property 'eq' does not exist on type 'Omit<SQLiteUpdateBase<SQLiteTableWithColumns<{ name: "profiles"; schema: undefined; columns: { id: SQLiteColumn<{ name: "id"; tableName: "profiles"; dataType: "string"; columnType: "SQLiteText"; data: string; driverParam: string; notNull: true; hasDefault: false; ... 6 more ...; generated: undefined; }, {}, { ...; }...'.
+app/api/webhook/clerk/route.ts(79,31): error TS2339: Property 'eq' does not exist on type 'SQLiteDeleteBase<SQLiteTableWithColumns<{ name: "profiles"; schema: undefined; columns: { id: SQLiteColumn<{ name: "id"; tableName: "profiles"; dataType: "string"; columnType: "SQLiteText"; data: string; driverParam: string; notNull: true; hasDefault: false; ... 6 more ...; generated: undefined; }, {}, { ...; }>; .....'.
+middleware.ts(15,12): error TS2339: Property 'protect' does not exist on type 'Promise<SessionAuthWithRedirect>'.
