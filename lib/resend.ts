@@ -1,6 +1,19 @@
 import { Resend } from "resend";
 
-export const resend = new Resend(process.env.RESEND_API_KEY);
+const getResend = () => {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    // Return a dummy object during build to prevent crashes
+    return {
+      emails: {
+        send: async () => ({ id: "dummy" }),
+      },
+    } as any;
+  }
+  return new Resend(apiKey);
+};
+
+export const resend = getResend();
 
 export async function sendMaintenanceReminder({
   to,

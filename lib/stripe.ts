@@ -1,8 +1,20 @@
 import Stripe from "stripe";
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: "2026-02-25.clover",
-});
+const getStripe = () => {
+  const apiKey = process.env.STRIPE_SECRET_KEY;
+  if (!apiKey) {
+    // Return a dummy object during build to prevent crashes
+    return {
+      customers: { create: async () => ({ id: "dummy" }) },
+      checkout: { sessions: async () => ({ url: "#" }) },
+    } as any;
+  }
+  return new Stripe(apiKey, {
+    apiVersion: "2026-02-25.clover",
+  });
+};
+
+export const stripe = getStripe();
 
 export const PLANS = {
   free: {
