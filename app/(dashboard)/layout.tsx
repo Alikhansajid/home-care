@@ -4,6 +4,25 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { db } from "@/db";
 import { profiles } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { cache } from "react";
+
+const ensureProfile = async (userId: string, email: string, fullName: string, avatarUrl: string) => {
+  const existing = await db.select().from(profiles).where(eq(profiles.id, userId));
+  
+  if (existing.length === 0) {
+    console.log("Creating missing profile for user:", userId);
+    await db.insert(profiles).values({
+      id: userId,
+      email: email,
+      full_name: fullName,
+      avatar_url: avatarUrl,
+      role: "homeowner",
+    });
+    return (await db.select().from(profiles).where(eq(profiles.id, userId)))[0];
+  }
+  
+  return existing[0];
+};
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { userId } = await auth();
@@ -11,7 +30,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!userId || !user) redirect("/login");
 
-  const profile = (await db.select().from(profiles).where(eq(profiles.id, userId)))[0];
+  const email = user.primaryEmailAddress?.emailAddress || "";
+  const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim();
+  const avatarUrl = user.imageUrl;
+
+  const profile = await ensureProfile(userId, email, fullName, avatarUrl);
 
   return (
     <div className="flex min-h-screen bg-muted/30">

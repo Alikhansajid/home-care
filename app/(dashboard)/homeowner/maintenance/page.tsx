@@ -43,10 +43,10 @@ export default function MaintenancePage() {
     },
   });
 
-  const { data: tasks = [], isLoading } = useQuery<(MaintenanceTask & { homes?: Home })[]>({
+  const { data: tasks = [], isLoading } = useQuery<(MaintenanceTask & { homes?: { id: string; name: string } })[]>({
     queryKey: ["maintenance-tasks", selectedHome],
     queryFn: async () => {
-      const data = (await getTasks(selectedHome || undefined)) as (MaintenanceTask & { homes?: Home })[];
+      const data = (await getTasks(selectedHome || undefined)) as (MaintenanceTask & { homes?: { id: string; name: string } })[];
       return data || [];
     },
   });

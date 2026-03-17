@@ -18,28 +18,36 @@ export default async function HomeownerDashboard() {
   const { userId } = await auth();
   if (!userId) redirect("/login");
 
-  const profile = (await db.select().from(profiles).where(eq(profiles.id, userId)))[0];
-  const homes = await db.select().from(homesTable).where(eq(homesTable.user_id, userId));
+  const [profileRes, homesRes] = await Promise.all([
+    db.select().from(profiles).where(eq(profiles.id, userId)),
+    db.select().from(homesTable).where(eq(homesTable.user_id, userId)),
+  ]);
+
+  const profile = profileRes[0];
+  const homes = homesRes;
   const homeIds = homes.map(h => h.id);
 
   let tasks: any[] = [];
   let expenses: any[] = [];
 
   if (homeIds.length > 0) {
-    const rawTasks = await db.select()
-      .from(maintenance_tasks)
-      .where(inArray(maintenance_tasks.home_id, homeIds))
-      .orderBy(asc(maintenance_tasks.next_due_date))
-      .limit(5);
+    const [rawTasks, rawExpenses] = await Promise.all([
+      db.select()
+        .from(maintenance_tasks)
+        .where(inArray(maintenance_tasks.home_id, homeIds))
+        .orderBy(asc(maintenance_tasks.next_due_date))
+        .limit(5),
+      db.select()
+        .from(expensesTable)
+        .where(inArray(expensesTable.home_id, homeIds)),
+    ]);
     
     tasks = rawTasks.map(t => ({
       ...t,
       homes: homes.find(h => h.id === t.home_id)
     }));
 
-    expenses = await db.select()
-      .from(expensesTable)
-      .where(inArray(expensesTable.home_id, homeIds));
+    expenses = rawExpenses;
   }
 
   const totalExpenses = expenses?.reduce((sum, e) => sum + (e.amount || 0), 0) || 0;

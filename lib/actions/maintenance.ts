@@ -2,30 +2,42 @@
 
 import { db } from "@/db";
 import { maintenance_tasks, homes } from "@/db/schema";
-import { eq, inArray, asc } from "drizzle-orm";
+import { eq, inArray, asc, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { MaintenanceTaskInput } from "@/lib/validations";
+import { revalidatePath } from "next/cache";
 
 export async function getTasks(homeId?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const userHomes = await db.select({ id: homes.id, name: homes.name }).from(homes).where(eq(homes.user_id, userId));
-  const homeIds = userHomes.map(h => h.id);
+  try {
+    const filters = [eq(homes.user_id, userId)];
+    if (homeId) {
+      filters.push(eq(maintenance_tasks.home_id, homeId));
+    }
 
-  if (homeIds.length === 0) return [];
+    const result = await db
+      .select({
+        task: maintenance_tasks,
+        home: {
+          id: homes.id,
+          name: homes.name,
+        },
+      })
+      .from(maintenance_tasks)
+      .innerJoin(homes, eq(maintenance_tasks.home_id, homes.id))
+      .where(sql.join(filters, sql` AND `))
+      .orderBy(asc(maintenance_tasks.next_due_date));
 
-  let query = db.select().from(maintenance_tasks).where(inArray(maintenance_tasks.home_id, homeIds)).orderBy(asc(maintenance_tasks.next_due_date));
-
-  if (homeId) {
-    query = db.select().from(maintenance_tasks).where(eq(maintenance_tasks.home_id, homeId)).orderBy(asc(maintenance_tasks.next_due_date));
+    return result.map(({ task, home }) => ({
+      ...task,
+      homes: home, // Keep existing structure for frontend compatibility
+    }));
+  } catch (error) {
+    console.error("Error fetching tasks:", error);
+    throw new Error("Failed to fetch maintenance tasks");
   }
-
-  const result = await query;
-  return result.map(task => ({
-    ...task,
-    homes: userHomes.find(h => h.id === task.home_id),
-  }));
 }
 
 export async function createTask(data: MaintenanceTaskInput, homeId: string) {
@@ -36,6 +48,8 @@ export async function createTask(data: MaintenanceTaskInput, homeId: string) {
     ...data,
     home_id: homeId,
   });
+
+  revalidatePath("/homeowner/maintenance");
 }
 
 export async function updateTask(id: string, data: Partial<MaintenanceTaskInput>) {
@@ -43,6 +57,7 @@ export async function updateTask(id: string, data: Partial<MaintenanceTaskInput>
   if (!userId) throw new Error("Unauthorized");
 
   await db.update(maintenance_tasks).set(data).where(eq(maintenance_tasks.id, id));
+  revalidatePath("/homeowner/maintenance");
 }
 
 export async function completeTask(id: string, frequencyDays: number | null) {
@@ -59,6 +74,8 @@ export async function completeTask(id: string, frequencyDays: number | null) {
     last_completed: today.toISOString().split("T")[0],
     next_due_date: nextDate,
   }).where(eq(maintenance_tasks.id, id));
+
+  revalidatePath("/homeowner/maintenance");
 }
 
 export async function deleteTask(id: string) {
@@ -66,4 +83,5 @@ export async function deleteTask(id: string) {
   if (!userId) throw new Error("Unauthorized");
 
   await db.delete(maintenance_tasks).where(eq(maintenance_tasks.id, id));
+  revalidatePath("/homeowner/maintenance");
 }

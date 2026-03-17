@@ -5,6 +5,7 @@ import { homes } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { HomeInput } from "@/lib/validations";
+import { revalidatePath } from "next/cache";
 
 export async function getHomes() {
   const { userId } = await auth();
@@ -21,6 +22,8 @@ export async function createHome(data: HomeInput) {
     ...data,
     user_id: userId,
   });
+
+  revalidatePath("/homeowner/homes");
 }
 
 export async function updateHome(id: string, data: HomeInput) {
@@ -28,6 +31,7 @@ export async function updateHome(id: string, data: HomeInput) {
   if (!userId) throw new Error("Unauthorized");
 
   await db.update(homes).set(data).where(eq(homes.id, id));
+  revalidatePath("/homeowner/homes");
 }
 
 export async function deleteHome(id: string) {
@@ -35,4 +39,5 @@ export async function deleteHome(id: string) {
   if (!userId) throw new Error("Unauthorized");
 
   await db.delete(homes).where(eq(homes.id, id));
+  revalidatePath("/homeowner/homes");
 }

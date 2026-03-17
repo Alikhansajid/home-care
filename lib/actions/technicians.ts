@@ -36,6 +36,9 @@ export async function updateTechnicianProfile(data: TechnicianListingInput) {
       is_available: true,
     });
   }
+
+  revalidatePath("/technician/listings");
+  revalidatePath("/marketplace");
 }
 
 export async function toggleTechnicianAvailability(currentStatus: boolean) {
@@ -45,4 +48,7 @@ export async function toggleTechnicianAvailability(currentStatus: boolean) {
   await db.update(technicians).set({
     is_available: !currentStatus,
   }).where(eq(technicians.user_id, userId));
+
+  revalidatePath("/technician/listings");
+  revalidatePath("/marketplace");
 }

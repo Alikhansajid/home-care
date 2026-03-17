@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["wlilfawiviuouniciwsd.supabase.co"],
+    domains: [],
   },
   async redirects() {
     return [

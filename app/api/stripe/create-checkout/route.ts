@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     if (!customerId) {
       const customer = await stripe.customers.create({
         email: profile?.email || user.primaryEmailAddress?.emailAddress || "",
-        metadata: { supabase_user_id: userId },
+        metadata: { clerk_user_id: userId },
       });
       customerId = customer.id;
 
@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/homeowner/dashboard?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing?canceled=true`,
-      metadata: { user_id: userId },
+      metadata: { clerk_user_id: userId },
     });
 
     return NextResponse.json({ url: session?.url || "#" });

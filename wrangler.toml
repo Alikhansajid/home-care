@@ -1,0 +1,8 @@
+name = "home-notification-saas"
+compatibility_date = "2024-04-03"
+pages_build_output_dir = ".next"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "homecare"
+database_id = "cb5a74c0-7926-4dbb-bc4b-79ef43af5519"

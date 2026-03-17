@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
-    const userId = session.metadata?.user_id;
+    const userId = session.metadata?.clerk_user_id;
     if (userId) {
       await db.update(profiles).set({ plan: "pro" }).where(eq(profiles.id, userId));
     }
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     const subscription = event.data.object as Stripe.Subscription;
     const customer = await stripe.customers.retrieve(subscription.customer as string);
     if ("metadata" in customer) {
-      const userId = customer.metadata?.supabase_user_id;
+      const userId = customer.metadata?.clerk_user_id;
       if (userId) {
         await db.update(profiles).set({ plan: "free" }).where(eq(profiles.id, userId));
       }

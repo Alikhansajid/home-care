@@ -2,26 +2,30 @@
 
 import { db } from "@/db";
 import { expenses, homes } from "@/db/schema";
-import { eq, desc, inArray } from "drizzle-orm";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 import { ExpenseInput } from "@/lib/validations";
+import { revalidatePath } from "next/cache";
 
 export async function getExpenses(homeId?: string) {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
 
-  const userHomes = await db.select({ id: homes.id }).from(homes).where(eq(homes.user_id, userId));
-  const homeIds = userHomes.map(h => h.id);
+  try {
+    const filters = [eq(expenses.user_id, userId)];
+    if (homeId) {
+      filters.push(eq(expenses.home_id, homeId));
+    }
 
-  if (homeIds.length === 0) return [];
-
-  let query = db.select().from(expenses).where(inArray(expenses.home_id, homeIds)).orderBy(desc(expenses.date));
-
-  if (homeId) {
-    query = db.select().from(expenses).where(eq(expenses.home_id, homeId)).orderBy(desc(expenses.date));
+    return await db
+      .select()
+      .from(expenses)
+      .where(and(...filters))
+      .orderBy(desc(expenses.date));
+  } catch (error) {
+    console.error("Error fetching expenses:", error);
+    throw new Error("Failed to fetch expenses");
   }
-
-  return await query;
 }
 
 export async function createExpense(data: ExpenseInput & { home_id: string }) {
@@ -32,6 +36,9 @@ export async function createExpense(data: ExpenseInput & { home_id: string }) {
     ...data,
     user_id: userId,
   });
+
+  revalidatePath("/homeowner/expenses");
+  revalidatePath("/homeowner/dashboard"); // Revalidate dashboard too since it shows expenses
 }
 
 export async function deleteExpense(id: string) {
@@ -39,4 +46,6 @@ export async function deleteExpense(id: string) {
   if (!userId) throw new Error("Unauthorized");
 
   await db.delete(expenses).where(eq(expenses.id, id));
+  revalidatePath("/homeowner/expenses");
+  revalidatePath("/homeowner/dashboard");
 }
